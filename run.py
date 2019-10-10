@@ -35,7 +35,7 @@ class DmakepkgContainer:
     # From https://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth/12514470
     # Written by user atzz
     @classmethod
-    def copytree(cls, src, dst, symlinks=False, ignore=None):
+    def copy_tree(cls, src, dst, symlinks=False, ignore=None):
         """
         Copy the directory tree from src to dst
         """
@@ -51,7 +51,7 @@ class DmakepkgContainer:
     # From https://stackoverflow.com/questions/2853723/what-is-the-python-way-for-recursively-setting-file-permissions
     # Written by user "too much php"
     @classmethod
-    def changeUserOrGid(cls, uid, gid, path):
+    def change_user_or_gid(cls, uid, gid, path):
         """
         Change all owner UIDs and GIDs of the files in the path to the given ones
         """
@@ -70,7 +70,7 @@ class DmakepkgContainer:
     # From https://www.tutorialspoint.com/How-to-change-the-permission-of-a-directory-using-Python
     # Written by Rajendra Dharmkar
     @classmethod
-    def changePermissionsRecursively(cls, path, mode):
+    def change_permissions_recursively(cls, path, mode):
         """
         Change the permissions of all files and directories in the given path to the given mode
         """
@@ -81,7 +81,7 @@ class DmakepkgContainer:
                 os.chmod(file, mode)
 
     @classmethod
-    def appendToFile(cls, path, content):
+    def append_to_file(cls, path, content):
         """
         Append the given content to the file found in the given path
         """
@@ -92,30 +92,30 @@ class DmakepkgContainer:
     # From https://stackoverflow.com/questions/17435056/read-bash-variables-into-a-python-script
     # Written by user Taejoon Byun
     @classmethod
-    def getVar(cls, script, varName):
+    def get_var(cls, script, var_name):
         """
         Source the given script in bash and print out the value of the variable varName (bash/sh script)
         """
-        cmd = 'echo $(source "{}"; echo ${{{}[@]}})'.format(script, varName)
+        cmd = 'echo $(source "{}"; echo ${{{}[@]}})'.format(script, var_name)
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, executable='/bin/bash')
         return process.stdout.readlines()[0].decode("utf-8").strip()
 
     # From https://stackoverflow.com/questions/17435056/read-bash-variables-into-a-python-script
     # Written by user Taejoon Byun
     @classmethod
-    def callFunc(cls, script, funcName):
+    def call_func(cls, script, func_name):
         """
         Source the given script in bash and print out the value the function funcName returns
         """
-        cmd = 'echo $(source "{}"; echo $({}))'.format(script, funcName)
+        cmd = 'echo $(source "{}"; echo $({}))'.format(script, func_name)
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, executable='/bin/bash')
         return process.stdout.readlines()[0].decode("utf-8").strip()
 
-    def checkForPumpMode(self):
+    def check_for_pump_mode(self):
         """
         Check if pump mode is enabled for any of the DISTCC_HOSTS in /etc/makepkg.conf
         """
-        if ",cpp" in self.getVar("/etc/makepkg.conf", "DISTCC_HOSTS") and self.use_pump_mode:
+        if ",cpp" in self.get_var("/etc/makepkg.conf", "DISTCC_HOSTS") and self.use_pump_mode:
             return True
         return False
 
@@ -164,8 +164,8 @@ class DmakepkgContainer:
         self.download_keys = namespace.z
         build_user_uid = pwd.getpwnam("build-user").pw_uid
         build_user_gid = pwd.getpwnam("build-user").pw_gid
-        self.copytree("/src/", "/build")
-        self.changeUserOrGid(build_user_uid, build_user_gid, "/build")
+        self.copy_tree("/src/", "/build")
+        self.change_user_or_gid(build_user_uid, build_user_gid, "/build")
 
         if self.run_pacman_syu:
             arguments = "pacman --noconfirm -Syu".split()
@@ -186,10 +186,10 @@ class DmakepkgContainer:
         if self.download_keys:
             gnupg = os.path.expanduser("~build-user/.gnupg")
             os.makedirs(gnupg, mode=0o700, exist_ok=True)
-            self.changeUserOrGid(build_user_uid, pwd.getpwnam("build-user").pw_gid, "/build")
-            self.changePermissionsRecursively(gnupg, 0o700)
-            self.appendToFile(gnupg + "/gpg.conf", "\nkeyserver-options auto-key-retrieve\n")
-            self.changePermissionsRecursively(gnupg + "/gpg.conf", 0o600)
+            self.change_user_or_gid(build_user_uid, pwd.getpwnam("build-user").pw_gid, "/build")
+            self.change_permissions_recursively(gnupg, 0o700)
+            self.append_to_file(gnupg + "/gpg.conf", "\nkeyserver-options auto-key-retrieve\n")
+            self.change_permissions_recursively(gnupg + "/gpg.conf", 0o600)
 
         # if a command is specified in -e, then run it
         if self.command:
@@ -197,14 +197,14 @@ class DmakepkgContainer:
             subprocess.run(args)
 
         # su resets PATH, so distcc doesn't find the distcc directory
-        if self.checkForPumpMode():
+        if self.check_for_pump_mode():
             bashfile_contents = "#! /bin/bash\n"
             "pump makepkg {}\n".format(" ".join(flags))
             with open("/buildScript.sh", "w") as file:
                 file.write(bashfile_contents)
-            self.changePermissionsRecursively("/buildScript.sh", 0o555)
+            self.change_permissions_recursively("/buildScript.sh", 0o555)
             arguments = ['su', '-c', 'DISTCC_HOSTS="{}" DISTCC_LOCATION={} pump makepkg {}'.format(
-                self.getVar("/etc/makepkg.conf", "DISTCC_HOSTS"),
+                self.get_var("/etc/makepkg.conf", "DISTCC_HOSTS"),
                 "/usr/bin", " ".join(flags)), '-s', '/bin/bash', 'build-user']
             makepkg_process = subprocess.run(arguments)
 
@@ -229,9 +229,9 @@ class DmakepkgContainer:
                     eprint(errs)
 
         if self.user and not self.group:
-            self.changeUserOrGid(self.user, self.group, "/build")
+            self.change_user_or_gid(self.user, self.group, "/build")
         elif self.user:
-            self.changeUserOrGid(self.user, -1, "/build")
+            self.change_user_or_gid(self.user, -1, "/build")
 
         # copy any packages
         # use globbing to get all packages
