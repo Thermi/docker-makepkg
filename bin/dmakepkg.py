@@ -5,7 +5,10 @@ import os
 import subprocess
 import uuid
 
-class dmakepkg:
+class Dmakepkg:
+    """
+    Class implementing a package builder for Arch Linux using Docker.
+    """
     __eDefaults = "--nosign --force --syncdeps --noconfirm"
     def __init__(self):
         self.pacman_conf = "/etc/pacman.conf"
@@ -19,21 +22,33 @@ class dmakepkg:
 
     # From https://stackoverflow.com/questions/17435056/read-bash-variables-into-a-python-script
     # Written by user Taejoon Byun
-    def getVar(self, script, varName):
-        cmd = 'echo $(source "{}"; echo ${{{}[@]}})'.format(script, varName)
+    @classmethod
+    def get_var(cls, script, var_name):
+        """
+        Source the given script in bash and print out the value of the
+        variable varName (bash/sh script)
+        """
+        cmd = 'echo $(source "{}"; echo ${{{}[@]}})'.format(script, var_name)
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, executable='/bin/bash')
         return process.stdout.readlines()[0].decode("utf-8").strip()
 
     # From https://stackoverflow.com/questions/17435056/read-bash-variables-into-a-python-script
     # Written by user Taejoon Byun
-    def callFunc(self, script, funcName):
-        cmd = 'echo $(source {}; echo $({}))'.format(script, funcName)
+    @classmethod
+    def call_func(cls, script, func_name):
+        """
+        Source the given script in bash and print out the value the function funcName returns
+        """
+        cmd = 'echo $(source {}; echo $({}))'.format(script, func_name)
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, executable='/bin/bash')
         return process.stdout.readlines()[0].decode("utf-8").strip()
 
-    def signPackages(self):
+    def sign_packages(self):
+        """
+        Sign all packages in the current working directory
+        """
         args = ["/bin/gpg", "--batch", "--yes", "--detach-sign"]
-        key = self.getVar(self.pacman_conf, "GPGKEY")
+        key = self.get_var(self.pacman_conf, "GPGKEY")
         if key:
             args.extend(["-u", key])
         files = []
@@ -48,9 +63,26 @@ class dmakepkg:
                 pkg_and_not_sigs.append(item)
                 subprocess.run(pkg_and_not_sigs)
 
+    # this function finds all possible arguments to the docker command line we could need
+    # and builds them.
+    def find_parameters(self):
+        """
+        Finds the values for SRCDEST, PKGDEST, SRCPKGDEST and LOGTEST and configures the container
+        to share those with the host.
+        """
+        parameters = ["-v", "/etc/makepkg.conf:/etc/makepkg.conf:ro"]
 
+        for i in ["SRCDEST", "PKGDEST", "SRCPKGDEST", "LOGDEST"]:
+            value = self.get_var(self.pacman_conf, i)
+            if value != "":
+                parameters.extend(["-v", "{}:{}".format(i, value)])
+        return parameters
 
     def main(self):
+        """
+        Main function for running this python script. Implements the argument parser,
+        logic to start the docker container and signing of the built packages.
+        """
         self.parser = argparse.ArgumentParser(prog="dmakepkg")
         self.parser.add_argument(
             '-x',
@@ -79,19 +111,21 @@ class dmakepkg:
         self.parser.add_argument(
             '-e',
             nargs='?',
-            help="Executes the argument as a command in the container after copying the package source")
+            help="Executes the argument as a command in the container after copying the"
+                 "package source")
 
         self.parser.add_argument(
             'rest',
             nargs=argparse.REMAINDER,
-            help="The arguments that are passed to the call to pacman in its executions in the container. They default to \"--nosign --force --syncdeps --noconfirm\".")
+            help="The arguments that are passed to the call to pacman in its executions in the"
+                 "container. They default to \"--nosign --force --syncdeps --noconfirm\".")
 
         namespace = self.parser.parse_args()
 
         parameters = ["--name", "dmakepkg_{}".format(uuid.uuid4())]
 
         # pacman.conf is not a bash file, so this doesn't work.
-        # local_cache_dir = self.getVar(self.pacmanConf, "CacheDir")
+        # local_cache_dir = self.get_var(self.pacmanConf, "CacheDir")
         # if not local_cache_dir:
         #   local_cache_dir = "/var/cache/pacman/pkg"
         local_cache_dir = "/var/cache/pacman/pkg"
@@ -148,22 +182,11 @@ class dmakepkg:
         docker_process = subprocess.Popen(complete_cmd_line)
         docker_process.wait()
 
-        for i in self.getVar(self.pacman_conf, "BUILDENV").split():
+        for i in self.get_var(self.pacman_conf, "BUILDENV").split():
             if "sign" in i:
                 if not i.startswith("!"):
-                    self.signPackages()
-
-    # this function finds all possible arguments to the docker command line we could need
-    # and builds them.
-    def find_parameters(self):
-        parameters = ["-v", "/etc/makepkg.conf:/etc/makepkg.conf:ro"]
-
-        for i in ["SRCDEST", "PKGDEST", "SRCPKGDEST", "LOGDEST"]:
-            value = self.getVar(self.pacman_conf, i)
-            if value != "":
-                parameters.extend(["-v", "{}:{}".format(i, value)])
-        return parameters
+                    self.sign_packages()
 
 if __name__ == '__main__':
-    DM = dmakepkg()
+    DM = Dmakepkg()
     DM.main()
