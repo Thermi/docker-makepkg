@@ -235,14 +235,12 @@ class DmakepkgContainer:
                 built_packages.append(item)
             except Exception as e:
                 eprint(e)
-        else:
-            if not built_packages:
-                eprint("No packages were built!")
-                sys.exit(2)
+
+        if not built_packages:
+            eprint("No packages were built!")
+            sys.exit(2)
         sys.exit(0)
 
 if __name__ == "__main__":
     CONTAINERENTRYPOINT = DmakepkgContainer()
     CONTAINERENTRYPOINT.main()
-
-#"PATH" : self.getVar("~build-user/.bashrc", "PATH")
