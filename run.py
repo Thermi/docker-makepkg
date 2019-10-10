@@ -18,7 +18,8 @@ def eprint(*args, **kwargs):
 
 class DmakepkgContainer:
     """
-    Class implementing a package builder for Arch Linux using Docker. This is the file running inside the container.
+    Class implementing a package builder for Arch Linux using Docker.
+    This is the file running inside the container.
     """
     __restDefaults = "--nosign --force --syncdeps --noconfirm"
 
@@ -32,12 +33,12 @@ class DmakepkgContainer:
         self.use_pump_mode = None
         self.download_keys = None
 
-    # From https://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth/12514470
-    # Written by user atzz
     @classmethod
     def copy_tree(cls, src, dst, symlinks=False, ignore=None):
         """
         Copy the directory tree from src to dst
+        From https://stackoverflow.com/questions/1868714
+        Written by user atzz
         """
         for item in os.listdir(src):
             source_directory = os.path.join(src, item)
@@ -47,13 +48,13 @@ class DmakepkgContainer:
             else:
                 shutil.copy2(source_directory, destination_directory)
 
-    # to not change either gid or uid, set that value to -1.
-    # From https://stackoverflow.com/questions/2853723/what-is-the-python-way-for-recursively-setting-file-permissions
-    # Written by user "too much php"
     @classmethod
     def change_user_or_gid(cls, uid, gid, path):
         """
         Change all owner UIDs and GIDs of the files in the path to the given ones
+        to not change either gid or uid, set that value to -1.
+        From https://stackoverflow.com/questions/2853723
+        Written by user "too much php"
         """
         for root, dirs, files in os.walk(path):
             for momo in dirs:
@@ -94,7 +95,8 @@ class DmakepkgContainer:
     @classmethod
     def get_var(cls, script, var_name):
         """
-        Source the given script in bash and print out the value of the variable varName (bash/sh script)
+        Source the given script in bash and print out the value of the
+        variable varName (bash/sh script)
         """
         cmd = 'echo $(source "{}"; echo ${{{}[@]}})'.format(script, var_name)
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, executable='/bin/bash')
