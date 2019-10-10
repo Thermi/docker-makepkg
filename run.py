@@ -34,7 +34,8 @@ class DmakepkgContainer:
 
     # From https://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth/12514470
     # Written by user atzz
-    def copytree(self, src, dst, symlinks=False, ignore=None):
+    @classmethod
+    def copytree(cls, src, dst, symlinks=False, ignore=None):
         """
         Copy the directory tree from src to dst
         """
@@ -49,7 +50,8 @@ class DmakepkgContainer:
     # to not change either gid or uid, set that value to -1.
     # From https://stackoverflow.com/questions/2853723/what-is-the-python-way-for-recursively-setting-file-permissions
     # Written by user "too much php"
-    def changeUserOrGid(self, uid, gid, path):
+    @classmethod
+    def changeUserOrGid(cls, uid, gid, path):
         """
         Change all owner UIDs and GIDs of the files in the path to the given ones
         """
@@ -67,7 +69,8 @@ class DmakepkgContainer:
 
     # From https://www.tutorialspoint.com/How-to-change-the-permission-of-a-directory-using-Python
     # Written by Rajendra Dharmkar
-    def changePermissionsRecursively(self, path, mode):
+    @classmethod
+    def changePermissionsRecursively(cls, path, mode):
         """
         Change the permissions of all files and directories in the given path to the given mode
         """
@@ -77,7 +80,8 @@ class DmakepkgContainer:
             for file in [os.path.join(root, f) for f in files]:
                 os.chmod(file, mode)
 
-    def appendToFile(self, path, content):
+    @classmethod
+    def appendToFile(cls, path, content):
         """
         Append the given content to the file found in the given path
         """
@@ -87,7 +91,8 @@ class DmakepkgContainer:
 
     # From https://stackoverflow.com/questions/17435056/read-bash-variables-into-a-python-script
     # Written by user Taejoon Byun
-    def getVar(self, script, varName):
+    @classmethod
+    def getVar(cls, script, varName):
         """
         Source the given script in bash and print out the value of the variable varName (bash/sh script)
         """
@@ -97,7 +102,8 @@ class DmakepkgContainer:
 
     # From https://stackoverflow.com/questions/17435056/read-bash-variables-into-a-python-script
     # Written by user Taejoon Byun
-    def callFunc(self, script, funcName):
+    @classmethod
+    def callFunc(cls, script, funcName):
         """
         Source the given script in bash and print out the value the function funcName returns
         """
