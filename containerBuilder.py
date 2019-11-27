@@ -23,7 +23,8 @@ class DmakepkgBuilder:
     head = ("FROM archlinux/base:latest\nLABEL org.thermicorp.tool=docker-makepkg\nRUN echo -e "
             "\"[multilib]\\nInclude = /etc/pacman.d/mirrorlist\" >> /etc/pacman.conf\n"
             "RUN pacman --noconfirm -Sy archlinux-keyring && pacman-key --init && "
-            "pacman-key --populate archlinux\n")
+            "pacman-key --populate archlinux\n"
+            "RUN systemd-machine-id-setup")
 
     tail = ("RUN useradd -m -d /build -s /bin/bash build-user\n"
             "ADD sudoers /etc/sudoers\n"
@@ -62,7 +63,7 @@ class DmakepkgBuilder:
             for (family, address_list) in addresses.items():
                 if family == netifaces.AF_INET:
                     for address_dict in address_list:
-                        return ipaddress.ip_address(addressDict["addr"])
+                        return ipaddress.ip_address(address_dict["addr"])
                 elif family == netifaces.AF_INET6:
                     for address_dict in address_list:
                         ipv6_address = ipaddress.ip_address(address_dict["addr"])
