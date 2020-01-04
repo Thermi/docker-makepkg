@@ -48,7 +48,7 @@ class Dmakepkg:
         Sign all packages in the current working directory
         """
         args = ["/bin/gpg", "--batch", "--yes", "--detach-sign"]
-        key = self.get_var(self.pacman_conf, "GPGKEY")
+        key = self.get_var(self.makepkg_conf, "GPGKEY")
         if key:
             args.extend(["-u", key])
         files = []
@@ -73,7 +73,7 @@ class Dmakepkg:
         parameters = ["-v", "/etc/makepkg.conf:/etc/makepkg.conf:ro"]
 
         for i in ["SRCDEST", "PKGDEST", "SRCPKGDEST", "LOGDEST"]:
-            value = self.get_var(self.pacman_conf, i)
+            value = self.get_var(self.makepkg_conf, i)
             if value != "":
                 parameters.extend(["-v", "{}:{}".format(i, value)])
         return parameters
@@ -151,7 +151,7 @@ class Dmakepkg:
         self.command = namespace.e
         self.use_host_pacman = namespace.x
 
-        if os.path.isfile(self.pacman_conf):
+        if os.path.isfile(self.makepkg_conf):
             parameters += self.find_parameters()
 
         # set object attributes
@@ -182,7 +182,7 @@ class Dmakepkg:
         docker_process = subprocess.Popen(complete_cmd_line)
         docker_process.wait()
 
-        for i in self.get_var(self.pacman_conf, "BUILDENV").split():
+        for i in self.get_var(self.makepkg_conf, "BUILDENV").split():
             if "sign" in i:
                 if not i.startswith("!"):
                     self.sign_packages()
