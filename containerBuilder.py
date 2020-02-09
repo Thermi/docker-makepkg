@@ -32,6 +32,7 @@ class DmakepkgBuilder:
             """VOLUME "/src\"\n"""
             "ADD run.py /run.py\n"
             "ADD gnupg.conf /build/.gnupg/gnupg.conf\n"
+            "RUN chown -R build-user:build-user ~build-user && chmod 700 ~build-user/.gnupg\n"
             """ENTRYPOINT ["/run.py"]\n""")
 
     def __init__(self):
