@@ -109,6 +109,11 @@ class Dmakepkg:
             help="Do not automatically download missing PGP keys",
             )
         self.parser.add_argument(
+            '-Z',
+            action='store_true',
+            help="Do not copy the source files. Build in the directory directly."
+            )
+        self.parser.add_argument(
             '-e',
             nargs='?',
             help="Executes the argument as a command in the container after copying the"
@@ -171,6 +176,9 @@ class Dmakepkg:
             complete_cmd_line.append("-z")
         if not self.use_pump_mode:
             complete_cmd_line.append("-y")
+        if namespace.Z:
+            complete_cmd_line.append("-Z")
+
         complete_cmd_line.extend(["-u", str(os.geteuid()), "-g", str(os.getegid())])
         if self.command:
             complete_cmd_line.extend(["-e", self.command])

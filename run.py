@@ -148,6 +148,11 @@ class DmakepkgContainer:
             action='store_false',
             help="Do not use pump mode.")
         self.parser.add_argument(
+            '-Z',
+            action='store_true',
+            help="Do not copy the source files. Build in the directory directly."
+            )
+        self.parser.add_argument(
             '-z',
             action='store_false',
             help="Do not automatically download missing PGP keys")
@@ -164,10 +169,20 @@ class DmakepkgContainer:
         self.user = int(namespace.u)
         self.use_pump_mode = namespace.y
         self.download_keys = namespace.z
-        build_user_uid = pwd.getpwnam("build-user").pw_uid
-        build_user_gid = pwd.getpwnam("build-user").pw_gid
-        self.copy_tree("/src/", "/build")
-        self.change_user_or_gid(build_user_uid, build_user_gid, "/build")
+        build_user_uid = None
+        # -Z arg has several consequences: 1) UID and GID of the PKGBUILD are used as the ones for the user
+        if namespace.Z:
+            stat_result = os.stat("/src/PKGBUILD")
+            subprocess.run(["groupadd", "-g", str(stat_result.st_gid), "build-user"])
+            subprocess.run(["useradd", "-m", "-d", "/build", "-s", "/bin/bash", "-u", str(stat_result.st_uid), "-g", str(stat_result.st_gid), "build-user"])
+            build_user_uid = stat_result.st_gid
+            os.chdir("/src")
+        else:
+            subprocess.run(["useradd", "-m", "-d", "/build", "-s", "/bin/bash", "build-user"])
+            build_user_uid = pwd.getpwnam("build-user").pw_uid
+            build_user_gid = pwd.getpwnam("build-user").pw_gid
+            self.copy_tree("/src/", "/build")
+            self.change_user_or_gid(build_user_uid, build_user_gid, "/build")
 
         if self.run_pacman_syu:
             arguments = "pacman --noconfirm -Syu".split()
@@ -179,6 +194,7 @@ class DmakepkgContainer:
             pacman_process.wait()
         flags = None
         built_packages = []
+
         if not self.rest:
             flags = self.__restDefaults.split()
         else:
@@ -190,7 +206,7 @@ class DmakepkgContainer:
             os.makedirs(gnupg, mode=0o700, exist_ok=True)
             self.change_user_or_gid(build_user_uid, pwd.getpwnam("build-user").pw_gid, "/build")
             self.change_permissions_recursively(gnupg, 0o700)
-            self.append_to_file(gnupg + "/gpg.conf", "\nkeyserver-options auto-key-retrieve\n")
+            self.append_to_file(gnupg + "/gpg.conf", "\nauto-key-retrieve\n")
             self.change_permissions_recursively(gnupg + "/gpg.conf", 0o600)
 
         # if a command is specified in -e, then run it
@@ -200,11 +216,7 @@ class DmakepkgContainer:
 
         # su resets PATH, so distcc doesn't find the distcc directory
         if self.check_for_pump_mode():
-            bashfile_contents = "#! /bin/bash\n"
             "pump makepkg {}\n".format(" ".join(flags))
-            with open("/buildScript.sh", "w") as file:
-                file.write(bashfile_contents)
-            self.change_permissions_recursively("/buildScript.sh", 0o555)
             arguments = ['su', '-c', 'DISTCC_HOSTS="{}" DISTCC_LOCATION={} pump makepkg {}'.format(
                 self.get_var("/etc/makepkg.conf", "DISTCC_HOSTS"),
                 "/usr/bin", " ".join(flags)), '-s', '/bin/bash', 'build-user']
