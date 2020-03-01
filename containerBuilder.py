@@ -25,7 +25,6 @@ class DmakepkgBuilder:
             "RUN systemd-machine-id-setup")
 
     tail = ("ADD sudoers /etc/sudoers\n"
-            """WORKDIR /build\n"""
             """VOLUME "/src\"\n"""
             "ADD run.py /run.py\n"
             """ENTRYPOINT ["/run.py"]\n""")
