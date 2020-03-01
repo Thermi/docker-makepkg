@@ -120,7 +120,7 @@ class Dmakepkg:
             help="The arguments that are passed to the call to pacman in its executions in the"
                  "container. They default to \"--nosign --force --syncdeps --noconfirm\".")
 
-        namespace = self.parser.parse_args()
+        namespace, rest = self.parser.parse_known_args()
 
         parameters = ["--name", "dmakepkg_{}".format(uuid.uuid4())]
 
@@ -171,13 +171,14 @@ class Dmakepkg:
         complete_cmd_line.append("makepkg")
 
         if not self.download_keys:
-            complete_cmd_line.append("-x")
+            complete_cmd_line.append("-z")
         if not self.use_pump_mode:
             complete_cmd_line.append("-y")
         complete_cmd_line.extend(["-u", str(os.geteuid()), "-g", str(os.getegid())])
         if self.command:
             complete_cmd_line.extend(["-e", self.command])
-        complete_cmd_line += namespace.rest
+        complete_cmd_line.extend(namespace.rest)
+        complete_cmd_line.extend(rest)
 
         docker_process = subprocess.Popen(complete_cmd_line)
         docker_process.wait()
