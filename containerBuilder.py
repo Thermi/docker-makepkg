@@ -24,12 +24,10 @@ class DmakepkgBuilder:
             "pacman-key --populate archlinux\n"
             "RUN systemd-machine-id-setup")
 
-    tail = ("RUN useradd -m -d /build -s /bin/bash build-user\n"
-            "ADD sudoers /etc/sudoers\n"
+    tail = ("ADD sudoers /etc/sudoers\n"
             """WORKDIR /build\n"""
             """VOLUME "/src\"\n"""
             "ADD run.py /run.py\n"
-            "RUN chown -R build-user:build-user ~build-user\n"
             """ENTRYPOINT ["/run.py"]\n""")
 
     def __init__(self):

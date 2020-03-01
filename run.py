@@ -56,6 +56,7 @@ class DmakepkgContainer:
         From https://stackoverflow.com/questions/2853723
         Written by user "too much php"
         """
+        os.chown(path, uid, gid)
         for root, dirs, files in os.walk(path):
             for momo in dirs:
                 try:
@@ -75,6 +76,7 @@ class DmakepkgContainer:
         """
         Change the permissions of all files and directories in the given path to the given mode
         """
+        os.chmod(path, mode)
         for root, dirs, files in os.walk(path, topdown=False):
             for directory in [os.path.join(root, d) for d in dirs]:
                 os.chmod(directory, mode)
@@ -170,11 +172,11 @@ class DmakepkgContainer:
         self.use_pump_mode = namespace.y
         self.download_keys = namespace.z
         build_user_uid = None
-        # -Z arg has several consequences: 1) UID and GID of the PKGBUILD are used as the ones for the user
         if namespace.Z:
             stat_result = os.stat("/src/PKGBUILD")
             subprocess.run(["groupadd", "-g", str(stat_result.st_gid), "build-user"])
             subprocess.run(["useradd", "-m", "-d", "/build", "-s", "/bin/bash", "-u", str(stat_result.st_uid), "-g", str(stat_result.st_gid), "build-user"])
+            self.change_user_or_gid(stat_result.st_uid, stat_result.st_gid, "/build")
             build_user_uid = stat_result.st_gid
             os.chdir("/src")
         else:
