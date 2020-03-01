@@ -8,8 +8,6 @@ import sys
 
 import netifaces
 
-# && mkdir /build/.gnupg && chown build-user:build-user /build/.gnupg && chmod 700 /build/.gnupg/
-
 def eprint(*args, **kwargs):
     """
     Shorthand for using print(file=sys.stderr)
@@ -31,7 +29,7 @@ class DmakepkgBuilder:
             """WORKDIR /build\n"""
             """VOLUME "/src\"\n"""
             "ADD run.py /run.py\n"
-            "ADD gnupg.conf /build/.gnupg/gnupg.conf\n"
+            "ADD gpg.conf /build/.gnupg/gpg.conf\n"
             "RUN chown -R build-user:build-user ~build-user && chmod 700 ~build-user/.gnupg\n"
             """ENTRYPOINT ["/run.py"]\n""")
 
@@ -102,7 +100,7 @@ class DmakepkgBuilder:
                 "\nRUN /bin/bash -c 'cat <(echo Server = "
                 "http://{}:{}) /etc/pacman.d/mirrorlist > foobar && mv foobar "
                 "/etc/pacman.d/mirrorlist && pacman -Syuq --noconfirm --needed "
-                "procps-ng gcc base-devel distcc python git mercurial bzr "
+                "procps-ng gcc base-devel ccache distcc python git mercurial bzr "
                 "subversion openssh && rm -rf /var/cache/pacman/pkg/* && "
                 "cp /etc/pacman.d/mirrorlist foo && tail -n +2 foo > "
                 "/etc/pacman.d/mirrorlist'\n").format(
@@ -111,7 +109,7 @@ class DmakepkgBuilder:
         else:
             complete = self.head + (
                 """\nRUN pacman -Syuq --noconfirm "
-                "--needed procps-ng  gcc base-devel distcc python git mercurial "
+                "--needed procps-ng  gcc base-devel distcc ccache python git mercurial "
                 "bzr subversion openssh && rm -rf /var/cache/pacman/pkg/*\n"
                 "COPY pump /usr/bin/pump\n""") + self.tail
         # write file
