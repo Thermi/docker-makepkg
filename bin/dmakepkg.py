@@ -133,19 +133,16 @@ class Dmakepkg:
         if namespace.x:
             parameters.extend(
                 ["-v",
-                 "/etc/pacman.conf:/etc/pacman.conf",
-                 "-v",
+                 "/etc/pacman.conf:/etc/pacman.conf"])
+
+        if namespace.X:
+            parameters.extend(["-v", "/etc/pacman.d/mirrorlist:/etc/pacman.d/mirrorlist:ro"]
+
+        if namespace.Y:
+            parameters.extend(["-v",
                  "{local_cache_dir}:{local_cache_dir}:ro".format(
                      local_cache_dir=local_cache_dir)])
         else:
-            parameters.extend("-v {}:{}".format(local_cache_dir, self.pacman_pkg_cache).split())
-
-        if namespace.X:
-            parameters.extend("-v /etc/pacman.d/mirrorlist:/etc/pacman.d/mirrorlist:ro".split(" "))
-
-        if namespace.Y:
-            parameters.extend("-v /var/cache/pacman/pkg/:/var/cache/pacman/pkg/:ro".split(" "))
-
         self.use_pump_mode = namespace.y
         self.download_keys = namespace.z
         self.command = namespace.e
