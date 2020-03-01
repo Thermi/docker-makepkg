@@ -21,6 +21,7 @@ optional arguments:
   -y          Never use pump mode, even if pump mode capable servers are
               configured
   -z          Do not automatically download missing PGP keys
+  -Z          Do not copy the sources. Work directly in the package directory.
   -e [E]      Executes the argument as a command in the container after
               copying the package source
 
@@ -41,6 +42,7 @@ $ dmakepkg
 * -x: Pass in the host's pacman.conf into the docker image.
 * -y: Force disabling of pump mode. By default, distcc `pump` mode is used to accelerate the compiling of code.
 * -z: Do not download missing PGP keys. By default, the downloading of missing PGP keys is _enabled_.
+* -Z          Do not copy the sources. Work directly in the package directory.
 * -e [E]: This executes the passed string as command in the container after copying of the package source. This can be used to, for example, install prerequired packages or perform arbitrary actions in the container.
 
 ## The docker image
