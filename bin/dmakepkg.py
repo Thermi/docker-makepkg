@@ -105,7 +105,7 @@ class Dmakepkg:
             )
         self.parser.add_argument(
             '-z',
-            action='store_false',
+            action='store_true',
             help="Do not automatically download missing PGP keys",
             )
         self.parser.add_argument(
@@ -149,7 +149,6 @@ class Dmakepkg:
                      local_cache_dir=local_cache_dir)])
 
         self.use_pump_mode = namespace.y
-        self.download_keys = namespace.z
         self.command = namespace.e
         self.use_host_pacman = namespace.x
 
@@ -172,7 +171,7 @@ class Dmakepkg:
         complete_cmd_line.extend(parameters)
         complete_cmd_line.append("makepkg")
 
-        if not self.download_keys:
+        if self.download_keys:
             complete_cmd_line.append("-z")
         if not self.use_pump_mode:
             complete_cmd_line.append("-y")
