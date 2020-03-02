@@ -207,9 +207,10 @@ class DmakepkgContainer:
             gnupg = os.path.expanduser("~build-user/.gnupg")
             os.makedirs(gnupg, mode=0o700, exist_ok=True)
             self.change_user_or_gid(build_user_uid, pwd.getpwnam("build-user").pw_gid, "/build")
-            self.change_permissions_recursively(gnupg, 0o700)
             self.append_to_file(gnupg + "/gpg.conf", "\nauto-key-retrieve\n")
+            self.change_permissions_recursively(gnupg, 0o700)
             self.change_permissions_recursively(gnupg + "/gpg.conf", 0o600)
+            self.change_user_or_gid(pwd.getpwnam("build-user").pw_uid, pwd.getpwnam("build-user").pw_gid, "/build")
 
         # if a command is specified in -e, then run it
         if self.command:
