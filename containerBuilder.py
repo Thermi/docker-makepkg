@@ -75,11 +75,19 @@ class DmakepkgBuilder:
         """
         args = ["/bin/docker", "build", "--pull", "--no-cache", "--tag=makepkg", os.path.dirname(
             os.path.realpath(__file__))]
-
+        docker_id=None
+        process=None
         try:
-            return subprocess.run(args).returncode
+            process=subprocess.run(args, capture_output=True)
         except:
-            return 1
+            pass
+        if process:
+            if process.returncode:
+                docker_id=process.stdout.decode("utf-8")
+                try:
+                    subprocess.run(["/bin/docker", "container", "rm", docker_id])
+                except:
+                    pass
 
     def pacman_cache_exists(self):
         """
