@@ -4,4 +4,4 @@ Description=Build the docker-makepkg container
 [Service]
 Type=oneshot
 ExecStart=/bin/python3 -B /opt/docker-makepkg/containerBuilder.py
-ExecStart=/bin/docker images prune --filter label=org.thermicorp.tool=docker-makepkg
+ExecStart=/bin/docker image prune --filter label=org.thermicorp.tool=docker-makepkg
